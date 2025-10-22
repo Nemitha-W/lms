@@ -70,22 +70,49 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentTheme === 'dark') document.body.classList.add('dark-theme');
     elements.themeToggle.textContent = currentTheme === 'dark' ? '☀️' : '🌙';
 
-    // --- Firebase Auth Listener ---
+    // --- Firebase Auth Listener (ROBUST VERSION) ---
     auth.onAuthStateChanged(async user => {
         if (user) {
-            state.user = user;
-            const userDoc = await db.collection('users').doc(user.uid).get();
-            state.userData = userDoc.data();
-            elements.userName.textContent = state.userData.name;
-            elements.dashboardUserName.textContent = state.userData.name;
-            elements.profileName.textContent = state.userData.name;
-            elements.profileEmail.textContent = state.userData.email;
-            elements.profileRole.textContent = state.userData.role;
+            try {
+                state.user = user;
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                
+                // Check if the user profile document exists
+                if (!userDoc.exists) {
+                    console.error("User profile document not found!");
+                    showToast("Error: User profile not found. Please contact support.", 'error');
+                    auth.signOut(); // Log the user out if their profile is missing
+                    return;
+                }
 
-            showRoleBasedElements();
-            router('dashboard');
-            loadDashboardStats();
+                state.userData = userDoc.data();
+                
+                // Check if userData is valid
+                if (!state.userData || !state.userData.name) {
+                     console.error("User profile data is malformed!", state.userData);
+                     showToast("Error: User profile is incomplete.", 'error');
+                     auth.signOut();
+                     return;
+                }
+
+                // If we get here, everything is okay, proceed with loading the app
+                elements.userName.textContent = state.userData.name;
+                elements.dashboardUserName.textContent = state.userData.name;
+                elements.profileName.textContent = state.userData.name;
+                elements.profileEmail.textContent = state.userData.email;
+                elements.profileRole.textContent = state.userData.role;
+
+                showRoleBasedElements();
+                router('dashboard');
+                loadDashboardStats();
+
+            } catch (error) {
+                console.error("Error during login state change:", error);
+                showToast("An error occurred while loading your profile.", 'error');
+                auth.signOut();
+            }
         } else {
+            // User is logged out
             state.user = null;
             state.userData = null;
             router('login');
