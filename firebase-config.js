@@ -1,11 +1,11 @@
 // Paste your Firebase configuration object here
 const firebaseConfig = {
-    apiKey: "AIza...YOUR...API_KEY",
-    authDomain: "your-project-id.firebaseapp.com",
-    projectId: "your-project-id",
-    storageBucket: "your-project-id.appspot.com",
-    messagingSenderId: "your-sender-id",
-    appId: "1:...:web:..."
+    apiKey: "AIzaSyDYS2C8Q7tDpyv-uqQb8d_Q2KnoTJ7ceig",
+    authDomain: "ylms-a486b.firebaseapp.com",
+    projectId: "ylms-a486b",
+    storageBucket: "ylms-a486b.firebasestorage.app",
+    messagingSenderId: "1031588247679",
+    appId: "1:1031588247679:web:9034c5e4f3ba91ab0fe74a"
 };
 
 // Initialize Firebase
