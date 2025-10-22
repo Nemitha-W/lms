@@ -3,107 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Learning LMS</title>
+    <title>EduStream - Modern LMS</title>
+    <meta name="theme-color" content="#007bff">
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
+
     <div id="app">
-        <!-- Header/Navigation -->
-        <header id="main-header" style="display: none;">
-            <div class="header-content">
-                <h1>Learning Portal</h1>
-                <nav>
-                    <span id="user-email"></span>
-                    <button id="logout-btn">Logout</button>
-                </nav>
+        <!-- Main App Shell -->
+        <header id="main-header" class="hidden">
+            <div class="header-left">
+                <button id="menu-toggle" class="icon-btn">☰</button>
+                <h1>EduStream</h1>
+            </div>
+            <div class="header-right">
+                <button id="theme-toggle" class="icon-btn">🌙</button>
+                <span id="user-name"></span>
+                <button id="logout-btn" class="btn btn-ghost">Logout</button>
             </div>
         </header>
 
-        <!-- Auth Views -->
-        <section id="auth-container">
-            <div id="login-view" class="auth-card">
-                <h2>Login</h2>
-                <form id="login-form">
-                    <input type="email" placeholder="Email" required>
-                    <input type="password" placeholder="Password" required>
-                    <button type="submit">Login</button>
-                </form>
-                <p>Don't have an account? <a href="#" id="show-register">Register</a></p>
-            </div>
-            <div id="register-view" class="auth-card" style="display: none;">
-                <h2>Register</h2>
-                <form id="register-form">
-                    <input type="text" placeholder="Full Name" required>
-                    <input type="email" placeholder="Email" required>
-                    <input type="password" placeholder="Password" required>
-                    <select id="role-select">
-                        <option value="student">Student</option>
-                        <option value="teacher">Teacher</option>
-                    </select>
-                    <button type="submit">Register</button>
-                </form>
-                <p>Already have an account? <a href="#" id="show-login">Login</a></p>
-            </div>
-        </section>
-
-        <!-- Main Dashboard View -->
-        <main id="dashboard-view" style="display: none;">
-            <aside id="sidebar">
-                <h3>My Courses</h3>
-                <div id="course-list"></div>
-                <!-- Teacher-only button -->
-                <button id="add-course-btn" class="teacher-feature" style="display: none;">+ Add New Course</button>
-            </aside>
-            <section id="content-area">
-                <div id="welcome-message">
-                    <h2>Welcome, <span id="user-name"></span>!</h2>
-                    <p>Select a course from the sidebar to begin.</p>
+        <div class="app-body">
+            <!-- Sidebar -->
+            <aside id="sidebar" class="hidden">
+                <nav class="sidebar-nav">
+                    <a href="#" data-view="dashboard" class="nav-link active">Dashboard</a>
+                    <a href="#" data-view="courses" class="nav-link">My Courses</a>
+                    <a href="#" data-view="profile" class="nav-link">Profile</a>
+                </nav>
+                <div class="sidebar-footer">
+                    <button id="add-course-btn" class="btn btn-primary teacher-feature hidden">+ New Course</button>
                 </div>
-                <div id="course-detail-view" style="display: none;">
+            </aside>
+
+            <!-- Main Content Area -->
+            <main id="main-content" class="hidden">
+                <!-- Dashboard View -->
+                <section id="dashboard-view" class="view">
+                    <h2>Welcome back, <span id="dashboard-user-name"></span>!</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card"><h3 id="stat-courses">0</h3><p>Courses</p></div>
+                        <div class="stat-card"><h3 id="stat-lessons">0</h3><p>Lessons</p></div>
+                        <div class="stat-card student-feature hidden"><h3 id="stat-completed">0</h3><p>Completed</p></div>
+                    </div>
+                </section>
+
+                <!-- Courses View -->
+                <section id="courses-view" class="view hidden">
+                    <div class="view-header">
+                        <h2>My Courses</h2>
+                    </div>
+                    <div id="course-list" class="card-grid"></div>
+                </section>
+
+                <!-- Course Detail View -->
+                <section id="course-detail-view" class="view hidden">
+                    <button id="back-to-courses" class="btn btn-ghost">← Back to Courses</button>
                     <div class="course-header">
                         <h2 id="course-title"></h2>
-                        <button id="add-lesson-btn" class="teacher-feature" style="display: none;">+ Add Lesson</button>
+                        <div class="course-actions">
+                            <button id="add-lesson-btn" class="btn btn-success teacher-feature hidden">+ Add Lesson</button>
+                            <button id="edit-course-btn" class="btn btn-secondary teacher-feature hidden">Edit</button>
+                        </div>
                     </div>
                     <div id="lesson-list"></div>
-                </div>
-                <div id="video-player-view" style="display: none;">
+                </section>
+
+                <!-- Video Player View -->
+                <section id="video-player-view" class="view hidden">
+                    <button id="back-to-detail" class="btn btn-ghost">← Back to Lesson</button>
                     <h3 id="lesson-title"></h3>
                     <div class="video-wrapper">
                         <iframe id="video-player" frameborder="0" allowfullscreen></iframe>
                     </div>
-                    <button id="mark-complete-btn" class="student-feature" style="display: none;">Mark as Complete</button>
-                </div>
-            </section>
-        </main>
+                    <div class="video-actions">
+                        <button id="mark-complete-btn" class="btn btn-primary student-feature hidden">Mark as Complete</button>
+                        <div id="livestream-controls" class="livestream-controls teacher-feature hidden">
+                            <h4>Livestream Studio</h4>
+                            <p>Copy the details below into your streaming software (OBS).</p>
+                            <div class="stream-info">
+                                <p><strong>Server URL:</strong> <code>rtmp://a.rtmp.youtube.com/live2</code></p>
+                                <p><strong>Stream Key:</strong> <input type="password" id="stream-key" readonly /></p>
+                                <button id="copy-key-btn" class="btn btn-secondary">Copy Key</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Profile View -->
+                <section id="profile-view" class="view hidden">
+                    <h2>Profile</h2>
+                    <div class="profile-card">
+                        <p><strong>Name:</strong> <span id="profile-name"></span></p>
+                        <p><strong>Email:</strong> <span id="profile-email"></span></p>
+                        <p><strong>Role:</strong> <span id="profile-role"></span></p>
+                    </div>
+                </section>
+            </main>
+        </div>
     </div>
 
-    <!-- Modals for forms -->
-    <div id="modal-overlay" style="display: none;"></div>
+    <!-- Auth Container -->
+    <div id="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>EduStream</h1>
+                <p>Your Modern Learning Portal</p>
+            </div>
+            <!-- Login Form -->
+            <form id="login-form" class="auth-form">
+                <h2>Login</h2>
+                <input type="email" placeholder="Email" required>
+                <input type="password" placeholder="Password" required>
+                <button type="submit" class="btn btn-primary">Login</button>
+                <p class="auth-switch">Don't have an account? <a href="#" id="show-register">Register</a></p>
+            </form>
+            <!-- Register Form -->
+            <form id="register-form" class="auth-form hidden">
+                <h2>Register</h2>
+                <input type="text" placeholder="Full Name" required>
+                <input type="email" placeholder="Email" required>
+                <input type="password" placeholder="Password" required>
+                <select id="role-select" required>
+                    <option value="student">Student</option>
+                    <option value="teacher">Teacher/Tutor</option>
+                </select>
+                <button type="submit" class="btn btn-primary">Register</button>
+                <p class="auth-switch">Already have an account? <a href="#" id="show-login">Login</a></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-overlay" class="modal-backdrop hidden"></div>
     
-    <!-- Add Course Modal -->
-    <div id="add-course-modal" class="modal" style="display: none;">
-        <h3>Add New Course</h3>
-        <form id="add-course-form">
-            <input type="text" id="new-course-name" placeholder="Course Name" required>
-            <button type="submit">Create Course</button>
-            <button type="button" class="close-modal-btn">Cancel</button>
+    <!-- Add/Edit Course Modal -->
+    <div id="course-modal" class="modal hidden">
+        <form id="course-form">
+            <h3 id="course-modal-title">Add New Course</h3>
+            <input type="text" id="course-name-input" placeholder="Course Name" required>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost cancel-btn">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
         </form>
     </div>
 
-    <!-- Add Lesson Modal -->
-    <div id="add-lesson-modal" class="modal" style="display: none;">
-        <h3>Add New Lesson</h3>
-        <form id="add-lesson-form">
-            <input type="text" id="new-lesson-title" placeholder="Lesson Title" required>
-            <input type="text" id="new-lesson-url" placeholder="YouTube Video URL" required>
-            <button type="submit">Add Lesson</button>
-            <button type="button" class="close-modal-btn">Cancel</button>
+    <!-- Add/Edit Lesson Modal -->
+    <div id="lesson-modal" class="modal hidden">
+        <form id="lesson-form">
+            <h3 id="lesson-modal-title">Add New Lesson</h3>
+            <input type="text" id="lesson-title-input" placeholder="Lesson Title" required>
+            <input type="text" id="lesson-url-input" placeholder="YouTube Video URL" required>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost cancel-btn">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
         </form>
     </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden"></div>
 
     <!-- JS Files -->
     <script src="firebase-config.js"></script>
