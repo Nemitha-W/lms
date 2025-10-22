@@ -14,16 +14,18 @@
     <div id="app">
         <!-- Header/Navigation -->
         <header id="main-header" style="display: none;">
-            <h1>Learning Portal</h1>
-            <nav>
-                <span id="user-email"></span>
-                <button id="logout-btn">Logout</button>
-            </nav>
+            <div class="header-content">
+                <h1>Learning Portal</h1>
+                <nav>
+                    <span id="user-email"></span>
+                    <button id="logout-btn">Logout</button>
+                </nav>
+            </div>
         </header>
 
         <!-- Auth Views -->
         <section id="auth-container">
-            <div id="login-view">
+            <div id="login-view" class="auth-card">
                 <h2>Login</h2>
                 <form id="login-form">
                     <input type="email" placeholder="Email" required>
@@ -32,7 +34,7 @@
                 </form>
                 <p>Don't have an account? <a href="#" id="show-register">Register</a></p>
             </div>
-            <div id="register-view" style="display: none;">
+            <div id="register-view" class="auth-card" style="display: none;">
                 <h2>Register</h2>
                 <form id="register-form">
                     <input type="text" placeholder="Full Name" required>
@@ -54,7 +56,7 @@
                 <h3>My Courses</h3>
                 <div id="course-list"></div>
                 <!-- Teacher-only button -->
-                <button id="add-course-btn" style="display: none;" class="teacher-feature">+ Add New Course</button>
+                <button id="add-course-btn" class="teacher-feature" style="display: none;">+ Add New Course</button>
             </aside>
             <section id="content-area">
                 <div id="welcome-message">
@@ -62,7 +64,10 @@
                     <p>Select a course from the sidebar to begin.</p>
                 </div>
                 <div id="course-detail-view" style="display: none;">
-                    <h2 id="course-title"></h2>
+                    <div class="course-header">
+                        <h2 id="course-title"></h2>
+                        <button id="add-lesson-btn" class="teacher-feature" style="display: none;">+ Add Lesson</button>
+                    </div>
                     <div id="lesson-list"></div>
                 </div>
                 <div id="video-player-view" style="display: none;">
@@ -70,7 +75,7 @@
                     <div class="video-wrapper">
                         <iframe id="video-player" frameborder="0" allowfullscreen></iframe>
                     </div>
-                    <button id="mark-complete-btn" class="student-feature">Mark as Complete</button>
+                    <button id="mark-complete-btn" class="student-feature" style="display: none;">Mark as Complete</button>
                 </div>
             </section>
         </main>
@@ -78,12 +83,25 @@
 
     <!-- Modals for forms -->
     <div id="modal-overlay" style="display: none;"></div>
+    
+    <!-- Add Course Modal -->
     <div id="add-course-modal" class="modal" style="display: none;">
         <h3>Add New Course</h3>
         <form id="add-course-form">
             <input type="text" id="new-course-name" placeholder="Course Name" required>
             <button type="submit">Create Course</button>
-            <button type="button" id="close-modal-btn">Cancel</button>
+            <button type="button" class="close-modal-btn">Cancel</button>
+        </form>
+    </div>
+
+    <!-- Add Lesson Modal -->
+    <div id="add-lesson-modal" class="modal" style="display: none;">
+        <h3>Add New Lesson</h3>
+        <form id="add-lesson-form">
+            <input type="text" id="new-lesson-title" placeholder="Lesson Title" required>
+            <input type="text" id="new-lesson-url" placeholder="YouTube Video URL" required>
+            <button type="submit">Add Lesson</button>
+            <button type="button" class="close-modal-btn">Cancel</button>
         </form>
     </div>
 
@@ -91,4 +109,4 @@
     <script src="firebase-config.js"></script>
     <script src="app.js"></script>
 </body>
-</html> 
+    </html>
