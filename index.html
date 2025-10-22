@@ -137,15 +137,24 @@
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // --- PASTE YOUR FIREBASE CONFIGURATION HERE ---
-        const firebaseConfig = {
-            apiKey: "AIza...YOUR...API_KEY",
-            authDomain: "your-project-id.firebaseapp.com",
-            projectId: "your-project-id",
-            storageBucket: "your-project-id.appspot.com",
-            messagingSenderId: "your-sender-id",
-            appId: "1:...:web:..."
-        };
+        // Paste your Firebase configuration object here
+const firebaseConfig = {
+    apiKey: "AIzaSyDYS2C8Q7tDpyv-uqQb8d_Q2KnoTJ7ceig",
+    authDomain: "ylms-a486b.firebaseapp.com",
+    projectId: "ylms-a486b",
+    storageBucket: "ylms-a486b.firebasestorage.app",
+    messagingSenderId: "1031588247679",
+    appId: "1:1031588247679:web:9034c5e4f3ba91ab0fe74a"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Your YouTube API Key
+const YOUTUBE_API_KEY = 'AIzaSyAC-jH2C0Dw9iaIO2LPvbf85fNcuEUQ9zg';
+
         // ---------------------------------------------
 
         // Initialize Firebase
