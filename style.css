@@ -1,0 +1,25 @@
+/* (Add all the previous CSS from the simple app) */
+
+/* New Styles for the Advanced App */
+#auth-container { display: flex; justify-content: center; align-items: center; height: 100vh; }
+#login-view, #register-view { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 300px; }
+#login-view input, #register-view input, #register-view select { width: 100%; padding: 8px; margin-bottom: 1rem; box-sizing: border-box; }
+
+#dashboard-view { display: flex; }
+#sidebar { flex: 1; min-width: 250px; background: #f8f9fa; padding: 1rem; height: calc(100vh - 80px); overflow-y: auto; }
+#content-area { flex: 3; padding: 2rem; height: calc(100vh - 80px); overflow-y: auto; }
+
+.course-item { padding: 1rem; margin-bottom: 0.5rem; background: white; border-radius: 5px; cursor: pointer; }
+.course-item.active { background: #007bff; color: white; }
+
+.lesson-item { display: flex; align-items: center; padding: 1rem; border-bottom: 1px solid #eee; cursor: pointer; }
+.lesson-item.completed { opacity: 0.6; }
+.lesson-item.completed::after { content: '✓'; color: green; font-weight: bold; margin-left: auto; }
+
+.live-badge { background: red; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8em; margin-left: 10px; }
+
+.modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 2rem; z-index: 1000; border-radius: 8px; }
+#modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+
+.teacher-feature { background-color: #28a745; }
+.student-feature { background-color: #17a2b8; }
