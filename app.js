@@ -39,13 +39,45 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentCourse = null;
     let userData = null;
 
-    // --- HELPER FUNCTION: Extract YouTube ID (CORRECTED) ---
-    function extractYouTubeId(url) {
-        // This regex is updated to handle /live/ URLs and other formats
-        const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?)|(live\/))\??v?=?([^#&?]*).*/;
-        const match = url.match(regExp);
-        return (match && match[7].length === 11) ? match[7] : null;
+    // --- HELPER FUNCTION: Extract YouTube ID (FOOLPROOF VERSION) ---
+function extractYouTubeId(url) {
+    try {
+        const urlObj = new URL(url);
+        const hostname = urlObj.hostname;
+
+        // Handle youtu.be short links
+        if (hostname === 'youtu.be') {
+            return urlObj.pathname.substring(1); // Get the part after the '/'
+        }
+
+        // Handle youtube.com, m.youtube.com, etc.
+        if (hostname.includes('youtube.com')) {
+            const params = new URLSearchParams(urlObj.search);
+            
+            // Standard watch link: ?v=ID
+            if (params.has('v')) {
+                return params.get('v');
+            }
+
+            // Live link or embed link: /live/ID or /embed/ID
+            const pathSegments = urlObj.pathname.split('/');
+            const liveIndex = pathSegments.indexOf('live');
+            const embedIndex = pathSegments.indexOf('embed');
+
+            if (liveIndex !== -1 && liveIndex + 1 < pathSegments.length) {
+                return pathSegments[liveIndex + 1];
+            }
+            if (embedIndex !== -1 && embedIndex + 1 < pathSegments.length) {
+                return pathSegments[embedIndex + 1];
+            }
+        }
+        
+        return null; // If no ID found
+    } catch (e) {
+        console.error("Invalid URL provided:", e);
+        return null;
     }
+}
 
     // --- AUTHENTICATION LOGIC ---
     auth.onAuthStateChanged(async user => {
