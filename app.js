@@ -39,11 +39,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentCourse = null;
     let userData = null;
 
-    // --- HELPER FUNCTION: Extract YouTube ID ---
+    // --- HELPER FUNCTION: Extract YouTube ID (CORRECTED) ---
     function extractYouTubeId(url) {
-    const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?)|(live\/))\??v?=?([^#&?]*).*/;
-    // ...
-}
+        // This regex is updated to handle /live/ URLs and other formats
+        const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?)|(live\/))\??v?=?([^#&?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[7].length === 11) ? match[7] : null;
+    }
 
     // --- AUTHENTICATION LOGIC ---
     auth.onAuthStateChanged(async user => {
