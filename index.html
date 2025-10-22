@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduStream LMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* --- Basic Setup & Theming --- */
+        :root {
+            --bg: #f4f6f8;
+            --surface: #ffffff;
+            --text: #1a1a1a;
+            --primary: #007bff;
+            --primary-hover: #0056b3;
+            --border: #e0e0e0;
+            --shadow: 0 2px 10px rgba(0,0,0,0.05);
+            --font: 'Inter', sans-serif;
+        }
+        body { font-family: var(--font); margin: 0; background: var(--bg); color: var(--text); }
+        .container { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+        h1, h2, h3 { font-weight: 600; }
+        a { color: var(--primary); text-decoration: none; }
+        button { font-family: var(--font); cursor: pointer; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 500; background: var(--primary); color: white; transition: background 0.2s; }
+        button:hover { background: var(--primary-hover); }
+        button.secondary { background: var(--border); color: var(--text); }
+        input, select { width: 100%; padding: 0.8rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
+        .card { background: var(--surface); padding: 1.5rem; border-radius: 8px; box-shadow: var(--shadow); margin-bottom: 1.5rem; }
+        .text-center { text-align: center; }
+        .hidden { display: none; }
+        .flex { display: flex; gap: 1rem; align-items: center; }
+        .space-between { justify-content: space-between; }
+
+        /* --- Auth --- */
+        #auth-view { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .auth-card { width: 100%; max-width: 400px; }
+        .auth-card h2 { text-align: center; margin-bottom: 1.5rem; }
+        .auth-form input, .auth-form select { margin-bottom: 1rem; }
+        .auth-form button { width: 100%; }
+        .auth-switch { text-align: center; margin-top: 1rem; font-size: 0.9rem; }
+
+        /* --- Dashboard --- */
+        #dashboard-view header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .course-item { padding: 1rem; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 1rem; cursor: pointer; transition: background 0.2s; }
+        .course-item:hover { background: var(--bg); }
+        .lesson-item { padding: 1rem; border-left: 4px solid var(--primary); background: var(--bg); margin-bottom: 0.5rem; cursor: pointer; }
+        .lesson-item.completed { opacity: 0.6; border-left-color: #28a745; }
+        .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; background: #000; border-radius: 6px; }
+        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .message { padding: 1rem; background: #d4edda; color: #155724; border-radius: 6px; margin-bottom: 1rem; border: 1px solid #c3e6cb; }
+        .message.error { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+
+        /* --- Responsive --- */
+        @media (max-width: 768px) {
+            .container { margin: 1rem auto; }
+            .flex { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- =================== AUTH VIEW =================== -->
+    <div id="auth-view">
+        <div class="card auth-card">
+            <!-- Login Form -->
+            <form id="login-form" class="auth-form">
+                <h2>Login</h2>
+                <input type="email" placeholder="Email" required>
+                <input type="password" placeholder="Password" required>
+                <button type="submit">Login</button>
+                <p class="auth-switch">Don't have an account? <a href="#" id="show-register">Register</a></p>
+            </form>
+            <!-- Register Form -->
+            <form id="register-form" class="auth-form hidden">
+                <h2>Register</h2>
+                <input type="text" placeholder="Full Name" required>
+                <input type="email" placeholder="Email" required>
+                <input type="password" placeholder="Password" required>
+                <select required>
+                    <option value="student">Student</option>
+                    <option value="teacher">Teacher</option>
+                </select>
+                <button type="submit">Register</button>
+                <p class="auth-switch">Already have an account? <a href="#" id="show-login">Login</a></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- =================== DASHBOARD VIEW =================== -->
+    <div id="dashboard-view" class="container hidden">
+        <header>
+            <h1>EduStream</h1>
+            <div class="flex">
+                <span id="user-name"></span>
+                <button id="logout-btn" class="secondary">Logout</button>
+            </div>
+        </header>
+
+        <div id="message-area"></div>
+
+        <!-- Course List -->
+        <section id="course-list-section">
+            <div class="flex space-between">
+                <h2>My Courses</h2>
+                <button id="add-course-btn" class="teacher-feature hidden">+ Add Course</button>
+            </div>
+            <div id="course-list"></div>
+        </section>
+
+        <!-- Course Detail -->
+        <section id="course-detail-section" class="hidden">
+            <button id="back-to-courses" class="secondary">← Back to Courses</button>
+            <div class="flex space-between">
+                <h2 id="course-title"></h2>
+                <div>
+                    <button id="add-lesson-btn" class="teacher-feature hidden">+ Add Lesson</button>
+                </div>
+            </div>
+            <div id="lesson-list"></div>
+        </section>
+
+        <!-- Video Player -->
+        <section id="video-player-section" class="hidden">
+            <button id="back-to-detail" class="secondary">← Back to Lessons</button>
+            <h3 id="lesson-title"></h3>
+            <div class="video-wrapper">
+                <iframe id="video-player" frameborder="0" allowfullscreen></iframe>
+            </div>
+            <button id="mark-complete-btn" class="student-feature hidden">Mark as Complete</button>
+        </section>
+    </div>
+
+    <!-- =================== SCRIPTS =================== -->
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // --- PASTE YOUR FIREBASE CONFIGURATION HERE ---
+        const firebaseConfig = {
+            apiKey: "AIza...YOUR...API_KEY",
+            authDomain: "your-project-id.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project-id.appspot.com",
+            messagingSenderId: "your-sender-id",
+            appId: "1:...:web:..."
+        };
+        // ---------------------------------------------
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // --- DOM Elements ---
+        const authView = document.getElementById('auth-view');
+        const dashboardView = document.getElementById('dashboard-view');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const courseListSection = document.getElementById('course-list-section');
+        const courseDetailSection = document.getElementById('course-detail-section');
+        const videoPlayerSection = document.getElementById('video-player-section');
+        const messageArea = document.getElementById('message-area');
+
+        // --- State ---
+        let user = null;
+        let userData = null;
+        let currentCourse = null;
+
+        // --- Helper Functions ---
+        function showView(view) {
+            authView.classList.add('hidden');
+            dashboardView.classList.add('hidden');
+            courseListSection.classList.add('hidden');
+            courseDetailSection.classList.add('hidden');
+            videoPlayerSection.classList.add('hidden');
+            view.classList.remove('hidden');
+        }
+
+        function showMessage(msg, isError = false) {
+            messageArea.innerHTML = `<div class="message ${isError ? 'error' : ''}">${msg}</div>`;
+            setTimeout(() => messageArea.innerHTML = '', 4000);
+        }
+
+        function extractYouTubeId(url) {
+            try {
+                const urlObj = new URL(url);
+                if (urlObj.hostname === 'youtu.be') return urlObj.pathname.substring(1);
+                if (urlObj.hostname.includes('youtube.com')) {
+                    const params = new URLSearchParams(urlObj.search);
+                    if (params.has('v')) return params.get('v');
+                    const pathSegments = urlObj.pathname.split('/');
+                    const liveIndex = pathSegments.indexOf('live');
+                    const embedIndex = pathSegments.indexOf('embed');
+                    if (liveIndex !== -1 && liveIndex + 1 < pathSegments.length) return pathSegments[liveIndex + 1];
+                    if (embedIndex !== -1 && embedIndex + 1 < pathSegments.length) return pathSegments[embedIndex + 1];
+                }
+                return null;
+            } catch (e) { return null; }
+        }
+
+        // --- Auth Logic ---
+        auth.onAuthStateChanged(async u => {
+            if (u) {
+                user = u;
+                const userDoc = await db.collection('users').doc(u.uid).get();
+                if (!userDoc.exists) {
+                    showMessage("User profile not found. Logging out.", true);
+                    auth.signOut();
+                    return;
+                }
+                userData = userDoc.data();
+                document.getElementById('user-name').textContent = userData.name;
+                document.querySelectorAll('.teacher-feature').forEach(el => el.style.display = userData.role === 'teacher' ? 'inline-block' : 'none');
+                document.querySelectorAll('.student-feature').forEach(el => el.style.display = userData.role === 'student' ? 'inline-block' : 'none');
+                showView(dashboardView);
+                loadCourses();
+            } else {
+                showView(authView);
+            }
+        });
+
+        loginForm.addEventListener('submit', e => {
+            e.preventDefault();
+            auth.signInWithEmailAndPassword(e.target[0].value, e.target[1].value).catch(err => showMessage(err.message, true));
+        });
+        registerForm.addEventListener('submit', e => {
+            e.preventDefault();
+            const [name, email, password, role] = e.target.elements;
+            auth.createUserWithEmailAndPassword(email.value, password.value)
+                .then(cred => db.collection('users').doc(cred.user.uid).set({ name: name.value, role: role.value }))
+                .then(() => showMessage('Registration successful!'))
+                .catch(err => showMessage(err.message, true));
+        });
+        document.getElementById('show-register').addEventListener('click', e => { e.preventDefault(); loginForm.classList.add('hidden'); registerForm.classList.remove('hidden'); });
+        document.getElementById('show-login').addEventListener('click', e => { e.preventDefault(); registerForm.classList.add('hidden'); loginForm.classList.remove('hidden'); });
+        document.getElementById('logout-btn').addEventListener('click', () => auth.signOut());
+
+        // --- Dashboard Logic ---
+        document.getElementById('add-course-btn').addEventListener('click', () => {
+            const name = prompt("Enter course name:");
+            if (name) {
+                db.collection('courses').add({ name, createdBy: user.uid }).then(() => loadCourses());
+            }
+        });
+
+        async function loadCourses() {
+            const snapshot = await db.collection('courses').where('createdBy', '==', user.uid).get();
+            const listEl = document.getElementById('course-list');
+            listEl.innerHTML = '';
+            if (snapshot.empty) { listEl.innerHTML = '<p class="text-center">No courses yet. Create one!</p>'; return; }
+            snapshot.forEach(doc => {
+                const course = { id: doc.id, ...doc.data() };
+                const item = document.createElement('div');
+                item.className = 'course-item';
+                item.innerHTML = `<h3>${course.name}</h3>`;
+                item.addEventListener('click', () => loadCourseDetail(course));
+                listEl.appendChild(item);
+            });
+        }
+
+        document.getElementById('back-to-courses').addEventListener('click', () => showView(courseListSection));
+
+        async function loadCourseDetail(course) {
+            currentCourse = course;
+            document.getElementById('course-title').textContent = course.name;
+            const snapshot = await db.collection('courses').doc(course.id).collection('lessons').orderBy('index').get();
+            const listEl = document.getElementById('lesson-list');
+            listEl.innerHTML = '';
+            if (snapshot.empty) { listEl.innerHTML = '<p class="text-center">No lessons yet. Add one!</p>'; }
+            snapshot.forEach(doc => {
+                const lesson = { id: doc.id, ...doc.data() };
+                const item = document.createElement('div');
+                item.className = 'lesson-item';
+                item.innerHTML = lesson.title;
+                item.addEventListener('click', () => playVideo(lesson));
+                listEl.appendChild(item);
+            });
+            showView(courseDetailSection);
+        }
+
+        document.getElementById('add-lesson-btn').addEventListener('click', () => {
+            const title = prompt("Enter lesson title:");
+            const url = prompt("Enter YouTube URL:");
+            if (title && url) {
+                const youtubeId = extractYouTubeId(url);
+                if (youtubeId) {
+                    db.collection('courses').doc(currentCourse.id).collection('lessons').add({ title, youtubeId, index: 1 }).then(() => loadCourseDetail(currentCourse));
+                } else {
+                    showMessage("Invalid YouTube URL.", true);
+                }
+            }
+        });
+
+        document.getElementById('back-to-detail').addEventListener('click', () => showView(courseDetailSection));
+
+        function playVideo(lesson) {
+            document.getElementById('lesson-title').textContent = lesson.title;
+            document.getElementById('video-player').src = `https://www.youtube.com/embed/${lesson.youtubeId}`;
+            showView(videoPlayerSection);
+        }
+
+        document.getElementById('mark-complete-btn').addEventListener('click', () => {
+            showMessage("Lesson marked as complete!");
+            // You can add logic here to save progress to Firestore if needed
+        });
+
+    </script>
+</body>
+</html>
