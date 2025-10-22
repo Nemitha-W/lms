@@ -1,143 +1,180 @@
-// DOM Elements
-const loginView = document.getElementById('login-view');
-const registerView = document.getElementById('register-view');
-const dashboardView = document.getElementById('dashboard-view');
-const authContainer = document.getElementById('auth-container');
-const mainHeader = document.getElementById('main-header');
+document.addEventListener('DOMContentLoaded', () => {
 
-// Auth Elements
-const loginForm = document.getElementById('login-form');
-const registerForm = document.getElementById('register-form');
-const showRegisterLink = document.getElementById('show-register');
-const showLoginLink = document.getElementById('show-login');
-const logoutBtn = document.getElementById('logout-btn');
+    // --- DOM Elements ---
+    const authContainer = document.getElementById('auth-container');
+    const loginView = document.getElementById('login-view');
+    const registerView = document.getElementById('register-view');
+    const dashboardView = document.getElementById('dashboard-view');
+    const mainHeader = document.getElementById('main-header');
 
-// Dashboard Elements
-const userEmailSpan = document.getElementById('user-email');
-const userNameSpan = document.getElementById('user-name');
-const courseList = document.getElementById('course-list');
-const courseDetailView = document.getElementById('course-detail-view');
-const videoPlayerView = document.getElementById('video-player-view');
-const videoPlayer = document.getElementById('video-player');
-const lessonTitle = document.getElementById('lesson-title');
-const courseTitle = document.getElementById('course-title');
-const lessonList = document.getElementById('lesson-list');
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const showRegisterLink = document.getElementById('show-register');
+    const showLoginLink = document.getElementById('show-login');
+    const logoutBtn = document.getElementById('logout-btn');
 
-// Global state
-let currentUser = null;
-let currentCourse = null;
+    const userEmailSpan = document.getElementById('user-email');
+    const userNameSpan = document.getElementById('user-name');
+    const courseList = document.getElementById('course-list');
+    const courseDetailView = document.getElementById('course-detail-view');
+    const videoPlayerView = document.getElementById('video-player-view');
+    const videoPlayer = document.getElementById('video-player');
+    const lessonTitle = document.getElementById('lesson-title');
+    const courseTitle = document.getElementById('course-title');
+    const lessonList = document.getElementById('lesson-list');
+    const welcomeMessage = document.getElementById('welcome-message');
 
-// --- AUTHENTICATION LOGIC ---
-auth.onAuthStateChanged(async user => {
-    if (user) {
-        currentUser = user;
-        const userDoc = await db.collection('users').doc(user.uid).get();
-        const userData = userDoc.data();
+    // Modal Elements
+    const modalOverlay = document.getElementById('modal-overlay');
+    const addCourseBtn = document.getElementById('add-course-btn');
+    const addCourseModal = document.getElementById('add-course-modal');
+    const addCourseForm = document.getElementById('add-course-form');
+    const addLessonBtn = document.getElementById('add-lesson-btn');
+    const addLessonModal = document.getElementById('add-lesson-modal');
+    const addLessonForm = document.getElementById('add-lesson-form');
+    const closeModalBtns = document.querySelectorAll('.close-modal-btn');
 
-        userEmailSpan.textContent = user.email;
-        userNameSpan.textContent = userData.name;
+    // --- Global State ---
+    let currentUser = null;
+    let currentCourse = null;
+    let userData = null;
 
-        // Show/hide teacher features
-        document.querySelectorAll('.teacher-feature').forEach(el => {
-            el.style.display = userData.role === 'teacher' ? 'inline-block' : 'none';
-        });
-        document.querySelectorAll('.student-feature').forEach(el => {
-            el.style.display = userData.role === 'student' ? 'inline-block' : 'none';
-        });
-
-        showDashboard();
-        loadCourses();
-    } else {
-        showAuth();
+    // --- HELPER FUNCTION: Extract YouTube ID ---
+    function extractYouTubeId(url) {
+        const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[7].length === 11) ? match[7] : null;
     }
-});
 
-function showAuth() {
-    authContainer.style.display = 'flex';
-    dashboardView.style.display = 'none';
-    mainHeader.style.display = 'none';
-}
+    // --- AUTHENTICATION LOGIC ---
+    auth.onAuthStateChanged(async user => {
+        if (user) {
+            currentUser = user;
+            const userDoc = await db.collection('users').doc(user.uid).get();
+            userData = userDoc.data();
 
-function showDashboard() {
-    authContainer.style.display = 'none';
-    dashboardView.style.display = 'flex';
-    mainHeader.style.display = 'flex';
-}
+            userEmailSpan.textContent = user.email;
+            userNameSpan.textContent = userData.name;
 
-// Event Listeners for Auth
-showRegisterLink.addEventListener('click', (e) => { e.preventDefault(); loginView.style.display='none'; registerView.style.display='block'; });
-showLoginLink.addEventListener('click', (e) => { e.preventDefault(); registerView.style.display='none'; loginView.style.display='block'; });
+            // Show/hide features based on role
+            document.querySelectorAll('.teacher-feature').forEach(el => {
+                el.style.display = userData.role === 'teacher' ? 'block' : 'none';
+            });
+            document.querySelectorAll('.student-feature').forEach(el => {
+                el.style.display = userData.role === 'student' ? 'inline-block' : 'none';
+            });
 
-loginForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const email = e.target[0].value;
-    const password = e.target[1].value;
-    auth.signInWithEmailAndPassword(email, password).catch(err => alert(err.message));
-});
-
-registerForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = e.target[0].value;
-    const email = e.target[1].value;
-    const password = e.target[2].value;
-    const role = e.target[3].value;
-    auth.createUserWithEmailAndPassword(email, password).then(cred => {
-        return db.collection('users').doc(cred.user.uid).set({ name, email, role });
-    }).catch(err => alert(err.message));
-});
-
-logoutBtn.addEventListener('click', () => auth.signOut());
-
-// --- DASHBOARD & COURSE LOGIC ---
-
-async function loadCourses() {
-    courseList.innerHTML = '';
-    const coursesSnapshot = await db.collection('courses').get();
-    coursesSnapshot.forEach(doc => {
-        const course = doc.data();
-        const courseItem = document.createElement('div');
-        courseItem.className = 'course-item';
-        courseItem.textContent = course.name;
-        courseItem.addEventListener('click', () => loadCourseDetail(doc.id, course));
-        courseList.appendChild(courseItem);
-    });
-}
-
-async function loadCourseDetail(courseId, courseData) {
-    currentCourse = { id: courseId, ...courseData };
-    courseTitle.textContent = courseData.name;
-    lessonList.innerHTML = '';
-
-    // Show active course in sidebar
-    document.querySelectorAll('.course-item').forEach(item => item.classList.remove('active'));
-    event.target.classList.add('active');
-
-    const lessonsSnapshot = await db.collection('courses').doc(courseId).collection('lessons').orderBy('index').get();
-    lessonsSnapshot.forEach(doc => {
-        const lesson = doc.data();
-        addLessonToUI(doc.id, lesson);
-    });
-
-    courseDetailView.style.display = 'block';
-    videoPlayerView.style.display = 'none';
-}
-
-async function addLessonToUI(lessonId, lesson) {
-    const lessonItem = document.createElement('div');
-    lessonItem.className = 'lesson-item';
-    
-    // Check if student completed this lesson
-    if (currentUser) {
-        const progressDoc = await db.collection('users').doc(currentUser.uid).collection('progress').doc(lessonId).get();
-        if (progressDoc.exists) {
-            lessonItem.classList.add('completed');
+            showDashboard();
+            loadCourses();
+        } else {
+            showAuth();
         }
+    });
+
+    function showAuth() {
+        authContainer.style.display = 'flex';
+        dashboardView.style.display = 'none';
+        mainHeader.style.display = 'none';
     }
 
-    // Fetch video details from YouTube API
-    fetch(`https://www.googleapis.com/youtube/v3/videos?id=${lesson.youtubeId}&part=snippet,liveStreamingDetails&key=${YOUTUBE_API_KEY}`)
-        .then(res => res.json())
-        .then(data => {
+    function showDashboard() {
+        authContainer.style.display = 'none';
+        dashboardView.style.display = 'flex';
+        mainHeader.style.display = 'block';
+    }
+
+    // Auth Event Listeners
+    showRegisterLink.addEventListener('click', (e) => { e.preventDefault(); loginView.style.display='none'; registerView.style.display='block'; });
+    showLoginLink.addEventListener('click', (e) => { e.preventDefault(); registerView.style.display='none'; loginView.style.display='block'; });
+    logoutBtn.addEventListener('click', () => auth.signOut());
+
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = e.target[0].value;
+        const password = e.target[1].value;
+        auth.signInWithEmailAndPassword(email, password).catch(err => alert(err.message));
+    });
+
+    registerForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = e.target[0].value;
+        const email = e.target[1].value;
+        const password = e.target[2].value;
+        const role = e.target[3].value;
+        auth.createUserWithEmailAndPassword(email, password).then(cred => {
+            return db.collection('users').doc(cred.user.uid).set({ name, email, role });
+        }).then(() => {
+            registerForm.reset();
+        }).catch(err => alert(err.message));
+    });
+
+    // --- MODAL LOGIC ---
+    function openModal(modal) {
+        modalOverlay.style.display = 'block';
+        modal.style.display = 'block';
+    }
+    function closeModal() {
+        modalOverlay.style.display = 'none';
+        document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+    }
+    closeModalBtns.forEach(btn => btn.addEventListener('click', closeModal));
+    modalOverlay.addEventListener('click', closeModal);
+
+    addCourseBtn.addEventListener('click', () => openModal(addCourseModal));
+    addLessonBtn.addEventListener('click', () => openModal(addLessonModal));
+
+    // --- COURSE & LESSON LOGIC ---
+    async function loadCourses() {
+        courseList.innerHTML = '';
+        const coursesSnapshot = await db.collection('courses').get();
+        coursesSnapshot.forEach(doc => {
+            const course = { id: doc.id, ...doc.data() };
+            const courseItem = document.createElement('div');
+            courseItem.className = 'course-item';
+            courseItem.innerHTML = `<span>${course.name}</span>`;
+            courseItem.addEventListener('click', () => loadCourseDetail(course));
+            courseList.appendChild(courseItem);
+        });
+    }
+
+    async function loadCourseDetail(course) {
+        currentCourse = course;
+        courseTitle.textContent = course.name;
+        lessonList.innerHTML = '';
+        
+        welcomeMessage.style.display = 'none';
+        courseDetailView.style.display = 'block';
+        videoPlayerView.style.display = 'none';
+
+        // Show active course in sidebar
+        document.querySelectorAll('.course-item').forEach(item => item.classList.remove('active'));
+        event.target.closest('.course-item').classList.add('active');
+
+        const lessonsSnapshot = await db.collection('courses').doc(course.id).collection('lessons').orderBy('index').get();
+        const lessonPromises = lessonsSnapshot.docs.map(doc => addLessonToUI(doc.id, doc.data()));
+        await Promise.all(lessonPromises); // Wait for all lesson titles to be fetched
+    }
+
+    async function addLessonToUI(lessonId, lesson) {
+        const lessonItem = document.createElement('div');
+        lessonItem.className = 'lesson-item';
+        lessonItem.dataset.lessonId = lessonId;
+
+        // Check if student completed this lesson
+        if (userData && userData.role === 'student') {
+            const progressDoc = await db.collection('users').doc(currentUser.uid).collection('progress').doc(lessonId).get();
+            if (progressDoc.exists) {
+                lessonItem.classList.add('completed');
+            }
+        }
+
+        // Fetch video details from YouTube API
+        try {
+            const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?id=${lesson.youtubeId}&part=snippet,liveStreamingDetails&key=${YOUTUBE_API_KEY}`);
+            if (!res.ok) throw new Error('Video not found or private');
+            const data = await res.json();
+            if (data.items.length === 0) throw new Error('Video not found');
+            
             const video = data.items[0];
             const title = video.snippet.title;
             const isLive = video.liveStreamingDetails && video.liveStreamingDetails.actualStartTime && !video.liveStreamingDetails.actualEndTime;
@@ -146,53 +183,69 @@ async function addLessonToUI(lessonId, lesson) {
             if (isLive) {
                 lessonItem.innerHTML += `<span class="live-badge">LIVE NOW</span>`;
             }
+        } catch (error) {
+            console.error("Error fetching YouTube data:", error);
+            lessonItem.innerHTML = `<span>${lesson.title || 'Untitled Lesson'}</span>`;
+        }
+
+        lessonItem.addEventListener('click', () => playVideo(lessonId, lesson));
+        lessonList.appendChild(lessonItem);
+    }
+
+    function playVideo(lessonId, lesson) {
+        lessonTitle.textContent = lesson.title || 'Loading Title...';
+        videoPlayer.src = `https://www.youtube.com/embed/${lesson.youtubeId}?rel=0&modestbranding=1`;
+        
+        courseDetailView.style.display = 'none';
+        videoPlayerView.style.display = 'block';
+
+        // Update active lesson
+        document.querySelectorAll('.lesson-item').forEach(item => item.classList.remove('active'));
+        document.querySelector(`.lesson-item[data-lesson-id="${lessonId}"]`).classList.add('active');
+
+        // Set up "Mark Complete" button
+        const markCompleteBtn = document.getElementById('mark-complete-btn');
+        markCompleteBtn.onclick = () => {
+            db.collection('users').doc(currentUser.uid).collection('progress').doc(lessonId).set({ completedAt: new Date() });
+            // Add checkmark immediately for better UX
+            document.querySelector(`.lesson-item[data-lesson-id="${lessonId}"]`).classList.add('completed');
+        };
+    }
+
+    // --- TEACHER FEATURES: Add Course & Lesson ---
+    addCourseForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const courseName = document.getElementById('new-course-name').value;
+        db.collection('courses').add({ name: courseName, createdBy: currentUser.uid }).then(() => {
+            closeModal();
+            addCourseForm.reset();
+            loadCourses();
         });
+    });
 
-    lessonItem.addEventListener('click', () => playVideo(lessonId, lesson));
-    lessonList.appendChild(lessonItem);
-}
+    addLessonForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const lessonTitle = document.getElementById('new-lesson-title').value;
+        const lessonUrl = document.getElementById('new-lesson-url').value;
+        const youtubeId = extractYouTubeId(lessonUrl);
 
-function playVideo(lessonId, lesson) {
-    lessonTitle.textContent = lesson.title || 'Loading Title...';
-    videoPlayer.src = `https://www.youtube.com/embed/${lesson.youtubeId}?rel=0`;
-    
-    courseDetailView.style.display = 'none';
-    videoPlayerView.style.display = 'block';
+        if (!youtubeId) {
+            alert('Invalid YouTube URL. Please check and try again.');
+            return;
+        }
 
-    // Set up "Mark Complete" button
-    const markCompleteBtn = document.getElementById('mark-complete-btn');
-    markCompleteBtn.onclick = () => {
-        db.collection('users').doc(currentUser.uid).collection('progress').doc(lessonId).set({ completedAt: new Date() });
-        loadCourseDetail(currentCourse.id, currentCourse); // Refresh to show checkmark
-    };
-}
-
-// --- TEACHER FEATURES (Add Course) ---
-const addCourseBtn = document.getElementById('add-course-btn');
-const addCourseModal = document.getElementById('add-course-modal');
-const modalOverlay = document.getElementById('modal-overlay');
-const addCourseForm = document.getElementById('add-course-form');
-const closeModalBtn = document.getElementById('close-modal-btn');
-
-addCourseBtn.addEventListener('click', () => {
-    modalOverlay.style.display = 'block';
-    addCourseModal.style.display = 'block';
-});
-
-function closeModal() {
-    modalOverlay.style.display = 'none';
-    addCourseModal.style.display = 'none';
-}
-
-closeModalBtn.addEventListener('click', closeModal);
-modalOverlay.addEventListener('click', closeModal);
-
-addCourseForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const courseName = document.getElementById('new-course-name').value;
-    db.collection('courses').add({ name: courseName, createdBy: currentUser.uid }).then(() => {
-        closeModal();
-        loadCourses();
-        addCourseForm.reset();
+        // Get the next index for the lesson
+        db.collection('courses').doc(currentCourse.id).collection('lessons').get().then(snap => {
+            const newIndex = snap.size + 1;
+            return db.collection('courses').doc(currentCourse.id).collection('lessons').add({
+                title: lessonTitle,
+                youtubeId: youtubeId,
+                index: newIndex
+            });
+        }).then(() => {
+            closeModal();
+            addLessonForm.reset();
+            loadCourseDetail(currentCourse); // Refresh the lesson list
+        });
     });
 });
